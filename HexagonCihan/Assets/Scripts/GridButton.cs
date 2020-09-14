@@ -74,28 +74,14 @@ public class GridButton : MonoBehaviour {
         _hexagonCoordinates[1] = HexagonCoordinates.Instance.Get(cx / 2 + 1, hexagon01Y);
         _hexagonCoordinates[2] = HexagonCoordinates.Instance.Get(hexagon2X, hexagon2Y);
 
-        //_hexagons[0] = Hexagons.Instance.Get(cx / 2, hexagon01Y);
-        //_hexagons[1] = Hexagons.Instance.Get(cx / 2 + 1, hexagon01Y);
-        //_hexagons[2] = Hexagons.Instance.Get(hexagon2X, hexagon2Y);
-
-        //_hexagons[0].GetComponent<Hexagon>().attachedGridButton = gameObject;
-        //_hexagons[1].GetComponent<Hexagon>().attachedGridButton = gameObject;
-        //_hexagons[2].GetComponent<Hexagon>().attachedGridButton = gameObject;
-
-        //_isRightArrow = _hexagons[2].transform.position.x > _hexagons[0].transform.position.x;
         _isRightArrow = _hexagonCoordinates[2].transform.position.x > _hexagonCoordinates[0].transform.position.x;
     }
 
     private void SetSurroundedHexagons() {
 
-        //_surroundedHexagons = new List<GameObject>();
-        //_surroundedHexagonColorIndexes = new List<int>();
-
         List<Vector2Int> surroundedHexagonIndexes = new List<Vector2Int>();
         Vector2Int gridSize = GameGrid.Instance.GetGridSize();
 
-        //int hx = _hexagons[0].GetComponent<Hexagon>().coordinates.x;
-        //int hy = _hexagons[0].GetComponent<Hexagon>().coordinates.y;
         int hx = _hexagonCoordinates[0].GetComponent<HexagonCoordinate>().coordinates.x;
         int hy = _hexagonCoordinates[0].GetComponent<HexagonCoordinate>().coordinates.y;
 
@@ -114,15 +100,26 @@ public class GridButton : MonoBehaviour {
             Vector2Int vctr = surroundedHexagonIndexes[i];
 
             if (vctr.x >= 0 && vctr.y >= 0 && vctr.x < gridSize.y && vctr.y < gridSize.x) {
-                //GameObject hexagon = Hexagons.Instance.Get(vctr.x, vctr.y);
-                //_surroundedHexagons[i] = hexagon;
-                //_surroundedHexagonColorIndexes[i] = hexagon.GetComponent<Hexagon>().colorIndex;
+
                 GameObject hexagonCoordinate = HexagonCoordinates.Instance.Get(vctr.x, vctr.y);
                 _surroundedHexagonCoordinates[i] = hexagonCoordinate;
                 _surroundedHexagonColorIndexes[i] = hexagonCoordinate.GetComponent<HexagonCoordinate>().attachedHexagon.GetComponent<Hexagon>().colorIndex;
 
             } else {
                 _surroundedHexagonCoordinates[i] = null;
+                _surroundedHexagonColorIndexes[i] = -1;
+            }
+        }
+    }
+
+    public void UpdateSurroundedHexagonColorIndexes() {
+
+        for (int i = 0; i < _surroundedHexagonCoordinates.Length; i++) {
+
+            if (_surroundedHexagonCoordinates[i] != null) {
+                _surroundedHexagonColorIndexes[i] =
+                    _surroundedHexagonCoordinates[i].GetComponent<HexagonCoordinate>().attachedHexagon.GetComponent<Hexagon>().colorIndex;
+            } else {
                 _surroundedHexagonColorIndexes[i] = -1;
             }
         }
@@ -156,12 +153,12 @@ public class GridButton : MonoBehaviour {
 
                 Rotate(isRight, () => {
 
-                    bool isMatch1 = GridButtons.Instance.CheckMatch();
+                    bool isMatch1 = CheckMatch();
                     if (!isMatch1) {
 
                         Rotate(isRight, () => {
 
-                            bool isMatch2 = GridButtons.Instance.CheckMatch();
+                            bool isMatch2 = CheckMatch();
 
                             if (!isMatch2) {
                                 Rotate(isRight, null);
@@ -199,15 +196,7 @@ public class GridButton : MonoBehaviour {
         GameObject hex1 = _hexagonCoordinates[1].GetComponent<HexagonCoordinate>().attachedHexagon;
         GameObject hex2 = _hexagonCoordinates[2].GetComponent<HexagonCoordinate>().attachedHexagon;
 
-        //Vector3 hex0Pos = hex0.GetComponent<RectTransform>().position;
-        //Vector3 hex1Pos = hex1.GetComponent<RectTransform>().position;
-        //Vector3 hex2Pos = hex2.GetComponent<RectTransform>().position;
-
         bool cond = (isRight && _isRightArrow) || (!isRight && !_isRightArrow);
-
-        //Vector2 hex0NewPos = cond ? hex2Pos : hex1Pos;
-        //Vector2 hex1NewPos = cond ? hex0Pos : hex2Pos;
-        //Vector2 hex2NewPos = cond ? hex1Pos : hex0Pos;
 
         Vector2 hex0NewPos = cond ? hexCoor2Pos : hexCoor1Pos;
         Vector2 hex1NewPos = cond ? hexCoor0Pos : hexCoor2Pos;
@@ -220,17 +209,11 @@ public class GridButton : MonoBehaviour {
             onComplete?.Invoke();
         });
 
-        //_hexagons[0] = cond ? hex1 : hex2;
-        //_hexagons[1] = cond ? hex2 : hex0;
-        //_hexagons[2] = cond ? hex0 : hex1;
-
-
     }
 
     public bool CheckIsMatchingOnStart() {
 
         if (IsMatching()) {
-            //_hexagons[2].GetComponent<Hexagon>().ChangeColorToNext();
             _hexagonCoordinates[2].GetComponent<HexagonCoordinate>().attachedHexagon.GetComponent<Hexagon>().ChangeColorToNext();
             return true;
         }
@@ -238,10 +221,6 @@ public class GridButton : MonoBehaviour {
     }
 
     public bool IsMatching() {
-
-        //int hex0Color = _hexagons[0].GetComponent<Hexagon>().colorIndex;
-        //int hex1Color = _hexagons[1].GetComponent<Hexagon>().colorIndex;
-        //int hex2Color = _hexagons[2].GetComponent<Hexagon>().colorIndex;
 
         int hex0Color = _hexagonCoordinates[0].GetComponent<HexagonCoordinate>().attachedHexagon.GetComponent<Hexagon>().colorIndex;
         int hex1Color = _hexagonCoordinates[1].GetComponent<HexagonCoordinate>().attachedHexagon.GetComponent<Hexagon>().colorIndex;
@@ -251,7 +230,8 @@ public class GridButton : MonoBehaviour {
 
     }
 
-    public bool CheckMatch() {
+
+    public bool CheckMatchAfterDestroy() {
 
         GameObject hex0 = _hexagonCoordinates[0].GetComponent<HexagonCoordinate>().attachedHexagon;
         GameObject hex1 = _hexagonCoordinates[1].GetComponent<HexagonCoordinate>().attachedHexagon;
@@ -264,7 +244,7 @@ public class GridButton : MonoBehaviour {
 
             if (hc0 == hc1 && hc0 == hc2) {
 
-                DestroyMatched(hex0, hex1, hex2);
+                DestroyHexagons(_hexagonCoordinates[0], _hexagonCoordinates[1], _hexagonCoordinates[2]);
                 return true;
             }
         }
@@ -272,28 +252,175 @@ public class GridButton : MonoBehaviour {
         return false;
     }
 
-    private void DestroyMatched(GameObject hex0, GameObject hex1, GameObject hex2) {
+    private bool CheckMatch() {
 
-        Destroy(hex0);
+        bool isMatch = false;
+
+        int hc0 = _hexagonCoordinates[0].GetComponent<HexagonCoordinate>().attachedHexagon.GetComponent<Hexagon>().colorIndex;
+        int hc1 = _hexagonCoordinates[1].GetComponent<HexagonCoordinate>().attachedHexagon.GetComponent<Hexagon>().colorIndex;
+        int hc2 = _hexagonCoordinates[2].GetComponent<HexagonCoordinate>().attachedHexagon.GetComponent<Hexagon>().colorIndex;
+
+        if (_isRightArrow) {
+
+            if (_possibleMatches.ContainsKey(0) && _possibleMatches[0] == hc0) {
+                DestroyMatched(0, 0);
+                isMatch = true;
+            }
+            if (_possibleMatches.ContainsKey(1) && _possibleMatches[1] == hc0) {
+                DestroyMatched(1, 0);
+                isMatch = true;
+            }
+            if (_possibleMatches.ContainsKey(8) && _possibleMatches[8] == hc0) {
+                DestroyMatched(8, 0);
+                isMatch = true;
+            }
+            if (_possibleMatches.ContainsKey(5) && _possibleMatches[5] == hc1) {
+                DestroyMatched(5, 1);
+                isMatch = true;
+            }
+            if (_possibleMatches.ContainsKey(6) && _possibleMatches[6] == hc1) {
+                DestroyMatched(6, 1);
+                isMatch = true;
+            }
+            if (_possibleMatches.ContainsKey(7) && _possibleMatches[7] == hc1) {
+                DestroyMatched(7, 1);
+                isMatch = true;
+            }
+            if (_possibleMatches.ContainsKey(2) && _possibleMatches[2] == hc2) {
+                DestroyMatched(2, 2);
+                isMatch = true;
+            }
+            if (_possibleMatches.ContainsKey(3) && _possibleMatches[3] == hc2) {
+                DestroyMatched(3, 2);
+                isMatch = true;
+            }
+            if (_possibleMatches.ContainsKey(4) && _possibleMatches[4] == hc2) {
+                DestroyMatched(4, 2);
+                isMatch = true;
+            }
+
+        } else {
+
+            if (_possibleMatches.ContainsKey(0) && _possibleMatches[0] == hc0) {
+                DestroyMatched(0, 0);
+                isMatch = true;
+            }
+            if (_possibleMatches.ContainsKey(1) && _possibleMatches[1] == hc0) {
+                DestroyMatched(1, 0);
+                isMatch = true;
+            }
+            if (_possibleMatches.ContainsKey(2) && _possibleMatches[2] == hc0) {
+                DestroyMatched(2, 0);
+                isMatch = true;
+            }
+            if (_possibleMatches.ContainsKey(3) && _possibleMatches[3] == hc1) {
+                DestroyMatched(3, 1);
+                isMatch = true;
+            }
+            if (_possibleMatches.ContainsKey(4) && _possibleMatches[4] == hc1) {
+                DestroyMatched(4, 1);
+                isMatch = true;
+            }
+            if (_possibleMatches.ContainsKey(5) && _possibleMatches[5] == hc1) {
+                DestroyMatched(5, 1);
+                isMatch = true;
+            }
+            if (_possibleMatches.ContainsKey(6) && _possibleMatches[6] == hc2) {
+                DestroyMatched(6, 2);
+                isMatch = true;
+            }
+            if (_possibleMatches.ContainsKey(7) && _possibleMatches[7] == hc2) {
+                DestroyMatched(7, 2);
+                isMatch = true;
+            }
+            if (_possibleMatches.ContainsKey(8) && _possibleMatches[8] == hc2) {
+                DestroyMatched(8, 2);
+                isMatch = true;
+            }
+        }
+
+        return isMatch;
+    }
+
+    private void DestroyMatched(int match, int hexagonIndex) {
+
+        int matchNext = (match + 1) % 9;
+
+        GameObject hexCoor1 = _surroundedHexagonCoordinates[match];
+        GameObject hexCoor2 = _surroundedHexagonCoordinates[matchNext];
+        GameObject hexCoor3 = _hexagonCoordinates[hexagonIndex];
+
+        DestroyHexagons(hexCoor1, hexCoor2, hexCoor3);
+    }
+
+    private void DestroyHexagons(GameObject hexCoor1, GameObject hexCoor2, GameObject hexCoor3) {
+
+        Vector2Int[] destroyedHexVectors = new Vector2Int[2];
+        destroyedHexVectors[0] = new Vector2Int(-1, -1);
+        destroyedHexVectors[1] = new Vector2Int(-1, -1);
+
+        GameObject hex1 = hexCoor1.GetComponent<HexagonCoordinate>().attachedHexagon;
+        GameObject hex2 = hexCoor2.GetComponent<HexagonCoordinate>().attachedHexagon;
+        GameObject hex3 = hexCoor3.GetComponent<HexagonCoordinate>().attachedHexagon;
+
+        Vector2Int hex1c = hexCoor1.GetComponent<HexagonCoordinate>().coordinates;
+        Vector2Int hex2c = hexCoor2.GetComponent<HexagonCoordinate>().coordinates;
+        Vector2Int hex3c = hexCoor3.GetComponent<HexagonCoordinate>().coordinates;
+
+        destroyedHexVectors[0] = hex1c;
+
+        if (hex2c.y == hex1c.y) {
+
+            Vector2Int coordinatesWithsmallerX = hex1c.x < hex2c.x ? hex1c : hex2c;
+            destroyedHexVectors[0] = new Vector2Int(-1, -1);
+            destroyedHexVectors[1] = coordinatesWithsmallerX;
+
+        } else {
+            destroyedHexVectors[1] = hex2c;
+        }
+
+        if (destroyedHexVectors[0].x == -1) {
+            destroyedHexVectors[0] = hex3c;
+
+        } else if (destroyedHexVectors[0].y == hex3c.y) {
+
+            Vector2Int currentVector0 = destroyedHexVectors[0];
+            Vector2Int currentVector1 = destroyedHexVectors[1];
+            destroyedHexVectors[0] = currentVector1;
+            Vector2Int coordinatesWithsmallerX = currentVector0.x < hex3c.x ? currentVector0 : hex3c;
+            destroyedHexVectors[1] = coordinatesWithsmallerX;
+
+        } else {
+            Vector2Int coordinatesWithsmallerX = destroyedHexVectors[1].x < hex3c.x ? destroyedHexVectors[1] : hex3c;
+            destroyedHexVectors[1] = coordinatesWithsmallerX;
+        }
+
         Destroy(hex1);
         Destroy(hex2);
+        Destroy(hex3);
 
-        _hexagonCoordinates[0].GetComponent<HexagonCoordinate>().attachedHexagon = null;
-        _hexagonCoordinates[1].GetComponent<HexagonCoordinate>().attachedHexagon = null;
-        _hexagonCoordinates[2].GetComponent<HexagonCoordinate>().attachedHexagon = null;
-
-        ScoreManager.Instance.IncreaseScore(15);
-
-        HexagonCoordinates.Instance.FillGaps();
-        /*
-        for (int i = destroyedHexVectors[0].x - 1; i >= 0; i--) {
-            HexagonCoordinates.Instance.Get(i, destroyedHexVectors[0].y).GetComponent<HexagonCoordinate>().SlideBottom(1);
+        if (destroyedHexVectors[0].x > 0) {
+            for (int i = destroyedHexVectors[0].x - 1; i >= 0; i--) {
+                HexagonCoordinates.Instance.SlideBottom(i, destroyedHexVectors[0].y, 1);
+            }
+        } else {
+            GameGrid.Instance.InstantiateNewHexagon(HexagonCoordinates.Instance.GetCoordinatePosition(0, destroyedHexVectors[0].y));
+            CheckIsTherePossibleMatch();
         }
 
-        for (int i = destroyedHexVectors[1].x - 1; i >= 0; i--) {
-            HexagonCoordinates.Instance.Get(i, destroyedHexVectors[1].y).GetComponent<HexagonCoordinate>().SlideBottom(2);
+        if (destroyedHexVectors[1].x > 0) {
+
+            for (int i = destroyedHexVectors[1].x - 1; i >= 0; i--) {
+                HexagonCoordinates.Instance.SlideBottom(i, destroyedHexVectors[1].y, 2);
+            }
+            if (destroyedHexVectors[1].x == 1) {
+                GameGrid.Instance.InstantiateNewHexagon(HexagonCoordinates.Instance.GetCoordinatePosition(1, destroyedHexVectors[1].y));
+            }
+        } else {
+            GameGrid.Instance.InstantiateNewHexagon(HexagonCoordinates.Instance.GetCoordinatePosition(0, destroyedHexVectors[1].y));
+            GameGrid.Instance.InstantiateNewHexagon(HexagonCoordinates.Instance.GetCoordinatePosition(1, destroyedHexVectors[1].y));
+            CheckIsTherePossibleMatch();
         }
-        */
     }
 
     public bool CheckIsTherePossibleMatch() {
@@ -326,10 +453,6 @@ public class GridButton : MonoBehaviour {
 
     private bool IsThereHexagonWithColorIndex(int colorIndex) {
 
-        //return _hexagons[0].GetComponent<Hexagon>().colorIndex == colorIndex ||
-        //       _hexagons[1].GetComponent<Hexagon>().colorIndex == colorIndex ||
-        //       _hexagons[2].GetComponent<Hexagon>().colorIndex == colorIndex;
-
         bool is0Empty = _hexagonCoordinates[0].GetComponent<HexagonCoordinate>().IsEmpty();
         bool is1Empty = _hexagonCoordinates[1].GetComponent<HexagonCoordinate>().IsEmpty();
         bool is2Empty = _hexagonCoordinates[2].GetComponent<HexagonCoordinate>().IsEmpty();
@@ -346,22 +469,14 @@ public class GridButton : MonoBehaviour {
     private void HandleClick() {
 
         GridButtons.Instance.DeselectAll();
-        //Hexagon.Instance.DeactivateAllSelectors();
         HexagonCoordinates.Instance.DeactivateAllSelectors();
 
         selected = true;
-
-        //_hexagons[0]?.GetComponent<Hexagon>().SetSelectorActivate(true);
-        //_hexagons[1]?.GetComponent<Hexagon>().SetSelectorActivate(true);
-        //_hexagons[2]?.GetComponent<Hexagon>().SetSelectorActivate(true);
 
         _hexagonCoordinates[0]?.GetComponent<HexagonCoordinate>().attachedHexagon.GetComponent<Hexagon>().SetSelectorActivate(true);
         _hexagonCoordinates[1]?.GetComponent<HexagonCoordinate>().attachedHexagon.GetComponent<Hexagon>().SetSelectorActivate(true);
         _hexagonCoordinates[2]?.GetComponent<HexagonCoordinate>().attachedHexagon.GetComponent<Hexagon>().SetSelectorActivate(true);
 
-        //foreach (GameObject hexagon in _surroundedHexagons) {
-        //    hexagon.GetComponent<Hexagon>().SetSelectorActivate(true);
-        //}
     }
 
 

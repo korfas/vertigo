@@ -66,25 +66,32 @@ public class GridButtons : Singleton<GridButtons> {
     }
     */
 
-    public bool CheckMatch() {
+    public bool CheckMatchAfterDestroy() {
 
         bool isMatch = false;
 
         foreach (GameObject gridButton in _allGridButtons) {
-            if (gridButton.GetComponent<GridButton>().CheckMatch()) {
+            if (gridButton.GetComponent<GridButton>().CheckMatchAfterDestroy()) {
                 isMatch = true;
             }
         }
         return isMatch;
     }
 
+    public void UpdateSurroundedHexagonColorIndexes() {
+        foreach (GameObject gridButton in _allGridButtons) {
+            gridButton.GetComponent<GridButton>().UpdateSurroundedHexagonColorIndexes();
+
+        }
+    }
+    /*
     public void CheckPossibleMatches() {
 
         foreach (GameObject gridButton in _allGridButtons) {
             gridButton.GetComponent<GridButton>().CheckIsTherePossibleMatch();
              
         }
-    }
+    }*/
 
     public void CheckIsMatchingOnStart() {
 

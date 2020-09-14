@@ -87,15 +87,17 @@ public class HexagonCoordinates : Singleton<HexagonCoordinates> {
     }
 
     private void FillCompleted() {
-        StartCoroutine(StartCheck());
+        //StartCoroutine(StartCheck());
     }
 
     private IEnumerator StartCheck() {
 
         yield return new WaitForSeconds(0.5f);
 
-        GridButtons.Instance.CheckMatch();
-        GridButtons.Instance.CheckPossibleMatches();
+        bool isMatch = GridButtons.Instance.CheckMatchAfterDestroy();
+        if (!isMatch) {
+            GridButtons.Instance.UpdateSurroundedHexagonColorIndexes();
+        }
     }
 
     private void ContinueFillingGaps(int startX, int startY) {
@@ -186,6 +188,31 @@ public class HexagonCoordinates : Singleton<HexagonCoordinates> {
             //}
 
         });
+
+    }
+
+    public void SlideBottom(int x, int y, int step) {
+
+        int newX = x + step;
+        GameObject hex = GetHexagon(x, y);
+
+        Vector3 newPos = GetCoordinatePosition(newX, y);
+
+        LeanTween.moveY(hex, newPos.y, 0.2f).setOnComplete(() => {
+            
+            if (x == 0) {
+                GameGrid.Instance.InstantiateNewHexagon(GetCoordinatePosition(x,y));
+                Debug.Log("Instantiate 1");
+            }
+            if (x == 1 && step == 2) {
+                GameGrid.Instance.InstantiateNewHexagon(GetCoordinatePosition(x, y));
+                Debug.Log("Instantiate 2");
+
+                StartCoroutine(StartCheck());
+            }
+
+        });
+
 
     }
 }
