@@ -14,12 +14,4 @@ public class Colors : MonoBehaviour {
 
         return colors[index];
     }
-    /*
-    public Color GetRandomColor() {
-
-        int i = Random.Range(0, colors.Length);
-        return colors[i];
-    }
-    */
-
 }

@@ -45,7 +45,7 @@ public class GameGrid : Singleton<GameGrid> {
 
     }
 
-    private void Init() {
+    public void Init() {
         GenerateCommonItems(false);
         SetSelectionButtons();
 
@@ -112,7 +112,6 @@ public class GameGrid : Singleton<GameGrid> {
                 GameObject hexagon = Instantiate(_hexagonPrefab, pos, Quaternion.identity, _hexagonsParent.transform);
 
                 hexagon.GetComponent<RectTransform>().sizeDelta = new Vector2(_hexagonWidth, _hexagonHeight);
-                //hexagon.GetComponent<Hexagon>().coordinates = new Vector2Int(j, i);
                 hexagon.name = j + "_" + i;
                 generatedHexagons[j, i] = hexagon;
 
@@ -139,17 +138,11 @@ public class GameGrid : Singleton<GameGrid> {
         float hexagon10PosY = generatedHexagons[1, 0].GetComponent<RectTransform>().position.y;
         float hexagon20PosY = generatedHexagons[2, 0].GetComponent<RectTransform>().position.y;
 
-        //float hexagonWidth = generatedHexagons[0, 0].GetComponent<RectTransform>().rect.width;
-        //float hexagonHeight = generatedHexagons[0, 0].GetComponent<RectTransform>().rect.height;
+        float button00PosX = (hexagon00PosX + hexagon01PosX) / 2.0f;
+        float button00PosY = (hexagon00PosY + hexagon10PosY) / 2.0f; 
 
-        //float paddingSizeX = ((hexagonWidth * 100 / (100 - _hexagonPaddingPercent)) - hexagonWidth) / 2.0f;
-        //float paddingSizeY = ((hexagonWidth * 100 / (100 - _hexagonPaddingPercent)) - hexagonHeight) / 2.0f;
-
-        float button00PosX = (hexagon00PosX + hexagon01PosX) / 2.0f; //- paddingSizeX;
-        float button00PosY = (hexagon00PosY + hexagon10PosY) / 2.0f; //- paddingSizeY;
-
-        float button01PosX = (hexagon01PosX + hexagon02PosX) / 2.0f; //- paddingSizeX;
-        float button10PosY = (hexagon10PosY + hexagon20PosY) / 2.0f; //- paddingSizeY;
+        float button01PosX = (hexagon01PosX + hexagon02PosX) / 2.0f; 
+        float button10PosY = (hexagon10PosY + hexagon20PosY) / 2.0f;
 
         float distanceX = button01PosX - button00PosX;
         float distanceY = (button10PosY - button00PosY) / 2;
@@ -167,11 +160,9 @@ public class GameGrid : Singleton<GameGrid> {
                 Vector3 pos = new Vector3(posX, posY, 0);
 
                 GameObject button = Instantiate(_buttonPrefab, pos, Quaternion.identity, _buttonsParent.transform);
-                //button.GetComponent<RectTransform>().sizeDelta = new Vector2(buttonSizeX, buttonSizeY);
                 button.GetComponent<RectTransform>().sizeDelta = new Vector2(buttonSizeX, buttonSizeY);
                 button.GetComponent<GridButton>().coordinates = new Vector2Int(j, i);
                 button.GetComponent<GridButton>().SetCoordinateText();
-                //button.GetComponent<GridButton>().SetHexagonVectors();
                 button.name = j + "_" + i;
             }
         }
@@ -196,8 +187,6 @@ public class GameGrid : Singleton<GameGrid> {
         GameObject hexagon = Instantiate(_hexagonPrefab, pos, Quaternion.identity, _hexagonsParent.transform);
         hexagon.GetComponent<RectTransform>().sizeDelta = new Vector2(_hexagonWidth, _hexagonHeight);
         hexagon.GetComponent<Hexagon>().Init();
-
-        //GridButtons.Instance.CheckMatch();
     }
 
 }

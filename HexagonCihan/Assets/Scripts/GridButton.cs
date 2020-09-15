@@ -10,10 +10,6 @@ public class GridButton : MonoBehaviour {
     [SerializeField] private GameObject _coordinateText = null;
     [SerializeField] private bool _debugCoordinates = false;
 
-    //private Vector2Int hexagonVector1;
-    //private Vector2Int hexagonVector2;
-    //private Vector2Int hexagonVector3;
-
     public Vector2Int coordinates;
 
     public bool selected = false;
@@ -21,8 +17,6 @@ public class GridButton : MonoBehaviour {
     private bool _isRightArrow = false;
     private bool _isTherePossibleMatch = false;
 
-    //private GameObject[] _hexagons = new GameObject[3];
-    //private GameObject[] _surroundedHexagons = new GameObject[9];
     private GameObject[] _hexagonCoordinates = new GameObject[3];
     private GameObject[] _surroundedHexagonCoordinates = new GameObject[9];
     private int[] _surroundedHexagonColorIndexes = new int[9];
@@ -46,15 +40,12 @@ public class GridButton : MonoBehaviour {
             GridButtons.Instance.InitComplete -= Init;
             InputManager.Instance.OnRotated -= HandleRotated;
 
-        } catch (Exception e) {
-            //Debug.Log("Could not unregister callback: " + e.Message);
-        }
+        } catch (Exception) { }
 
     }
 
     private void Init() {
 
-        //SetHexagons();
         SetSurroundedHexagons();
         CheckIsTherePossibleMatch();
 
@@ -367,60 +358,18 @@ public class GridButton : MonoBehaviour {
         Vector2Int hex2c = hexCoor2.GetComponent<HexagonCoordinate>().coordinates;
         Vector2Int hex3c = hexCoor3.GetComponent<HexagonCoordinate>().coordinates;
 
-        destroyedHexVectors[0] = hex1c;
-
-        if (hex2c.y == hex1c.y) {
-
-            Vector2Int coordinatesWithsmallerX = hex1c.x < hex2c.x ? hex1c : hex2c;
-            destroyedHexVectors[0] = new Vector2Int(-1, -1);
-            destroyedHexVectors[1] = coordinatesWithsmallerX;
-
-        } else {
-            destroyedHexVectors[1] = hex2c;
-        }
-
-        if (destroyedHexVectors[0].x == -1) {
-            destroyedHexVectors[0] = hex3c;
-
-        } else if (destroyedHexVectors[0].y == hex3c.y) {
-
-            Vector2Int currentVector0 = destroyedHexVectors[0];
-            Vector2Int currentVector1 = destroyedHexVectors[1];
-            destroyedHexVectors[0] = currentVector1;
-            Vector2Int coordinatesWithsmallerX = currentVector0.x < hex3c.x ? currentVector0 : hex3c;
-            destroyedHexVectors[1] = coordinatesWithsmallerX;
-
-        } else {
-            Vector2Int coordinatesWithsmallerX = destroyedHexVectors[1].x < hex3c.x ? destroyedHexVectors[1] : hex3c;
-            destroyedHexVectors[1] = coordinatesWithsmallerX;
-        }
-
         Destroy(hex1);
         Destroy(hex2);
         Destroy(hex3);
 
-        if (destroyedHexVectors[0].x > 0) {
-            for (int i = destroyedHexVectors[0].x - 1; i >= 0; i--) {
-                HexagonCoordinates.Instance.SlideBottom(i, destroyedHexVectors[0].y, 1);
-            }
-        } else {
-            GameGrid.Instance.InstantiateNewHexagon(HexagonCoordinates.Instance.GetCoordinatePosition(0, destroyedHexVectors[0].y));
-            CheckIsTherePossibleMatch();
-        }
+        HexagonCoordinates.Instance.AddCoordinateToFill(hex1c);
+        HexagonCoordinates.Instance.AddCoordinateToFill(hex2c);
+        HexagonCoordinates.Instance.AddCoordinateToFill(hex3c);
+        HexagonCoordinates.Instance.StartFilling();
 
-        if (destroyedHexVectors[1].x > 0) {
+        ScoreManager.Instance.IncreaseScore(15);
 
-            for (int i = destroyedHexVectors[1].x - 1; i >= 0; i--) {
-                HexagonCoordinates.Instance.SlideBottom(i, destroyedHexVectors[1].y, 2);
-            }
-            if (destroyedHexVectors[1].x == 1) {
-                GameGrid.Instance.InstantiateNewHexagon(HexagonCoordinates.Instance.GetCoordinatePosition(1, destroyedHexVectors[1].y));
-            }
-        } else {
-            GameGrid.Instance.InstantiateNewHexagon(HexagonCoordinates.Instance.GetCoordinatePosition(0, destroyedHexVectors[1].y));
-            GameGrid.Instance.InstantiateNewHexagon(HexagonCoordinates.Instance.GetCoordinatePosition(1, destroyedHexVectors[1].y));
-            CheckIsTherePossibleMatch();
-        }
+        
     }
 
     public bool CheckIsTherePossibleMatch() {
@@ -447,9 +396,6 @@ public class GridButton : MonoBehaviour {
         return _isTherePossibleMatch;
 
     }
-
-
-
 
     private bool IsThereHexagonWithColorIndex(int colorIndex) {
 
@@ -478,9 +424,6 @@ public class GridButton : MonoBehaviour {
         _hexagonCoordinates[2]?.GetComponent<HexagonCoordinate>().attachedHexagon.GetComponent<Hexagon>().SetSelectorActivate(true);
 
     }
-
-
-
 
     public void SetCoordinateText() {
 

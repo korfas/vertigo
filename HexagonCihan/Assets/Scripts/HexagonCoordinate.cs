@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class HexagonCoordinate : MonoBehaviour {
 
@@ -30,25 +28,4 @@ public class HexagonCoordinate : MonoBehaviour {
         }
     }
 
-    /*
-    public void SlideBottom(int step) {
-
-        int newX = coordinates.x + step;
-
-        Vector3 newPos = HexagonCoordinates.Instance.GetCoordinatePosition(newX, coordinates.y);
-
-        LeanTween.moveY(attachedHexagon, newPos.y, 0.2f).setOnComplete(()=> {
-
-            if (coordinates.x == 0) {
-                GameGrid.Instance.InstantiateNewHexagon(transform.position);
-                Debug.Log("Instantiate 1");
-            }
-            if (coordinates.x == 1 && step == 2) {
-                GameGrid.Instance.InstantiateNewHexagon(transform.position);
-                Debug.Log("Instantiate 2");
-            }
-
-        });
-    }
-    */
 }

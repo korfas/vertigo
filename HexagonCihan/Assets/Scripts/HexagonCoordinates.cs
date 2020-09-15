@@ -10,7 +10,12 @@ public class HexagonCoordinates : Singleton<HexagonCoordinates> {
     public event Action OnInitialized;
     public bool isInitialized { get; private set; } = false;
 
-    private Vector2Int _gridSize;
+    private List<Vector2Int> _coordinatesToInstantiateAbove;
+    private List<Vector2Int> _coordinatesToFill;
+    private List<GameObject> _hexagonsToSlide;
+    private List<float> _targetPositions;
+
+    private int _numberOfCurrentlySlidingHexagons = 0;
 
     private void Start() {
 
@@ -28,14 +33,12 @@ public class HexagonCoordinates : Singleton<HexagonCoordinates> {
         try {
             GameGrid.Instance.OnInitialized -= Init;
 
-        } catch (Exception e) {
-            //Debug.Log("Could not unregister callback: " + e.Message);
-        }
+        } catch (Exception) { }
     }
 
     public void Init() {
 
-        _gridSize = GameGrid.Instance.GetGridSize();
+        InitLists();
 
         int hexagonCoordinatesCount = transform.childCount;
         _allHexagonCoordinates = new GameObject[hexagonCoordinatesCount];
@@ -52,6 +55,14 @@ public class HexagonCoordinates : Singleton<HexagonCoordinates> {
 
         isInitialized = true;
         OnInitialized?.Invoke();
+    }
+
+    private void InitLists() {
+
+        _coordinatesToInstantiateAbove = new List<Vector2Int>();
+        _coordinatesToFill = new List<Vector2Int>();
+        _hexagonsToSlide = new List<GameObject>();
+        _targetPositions = new List<float>();
     }
 
     public Vector3 GetCoordinatePosition(int x, int y) {
@@ -80,16 +91,6 @@ public class HexagonCoordinates : Singleton<HexagonCoordinates> {
         }
     }
 
-    public void FillGaps() {
-
-        ContinueFillingGaps(_gridSize.y - 1, 0);
-
-    }
-
-    private void FillCompleted() {
-        //StartCoroutine(StartCheck());
-    }
-
     private IEnumerator StartCheck() {
 
         yield return new WaitForSeconds(0.5f);
@@ -97,122 +98,95 @@ public class HexagonCoordinates : Singleton<HexagonCoordinates> {
         bool isMatch = GridButtons.Instance.CheckMatchAfterDestroy();
         if (!isMatch) {
             GridButtons.Instance.UpdateSurroundedHexagonColorIndexes();
-        }
-    }
-
-    private void ContinueFillingGaps(int startX, int startY) {
-
-        int jLoop = startY;
-
-        for (int i = startX; i >= 0; i--) {
-
-            bool willBreak = false;
-
-            for (int j = jLoop; j < _gridSize.x; j++) {
-
-                GameObject hexagonCoordinate = Get(i, j);
-                bool isHexEmpty = hexagonCoordinate.GetComponent<HexagonCoordinate>().IsEmpty();
-
-                if (isHexEmpty) {
-
-                    CheckTop(hexagonCoordinate, i, j);
-                    willBreak = true;
-                    if (i == 0 && j == _gridSize.x - 1) {
-                        FillCompleted();
-                    }
-                    break;
-                }
-                jLoop = 0;
-
-                if (i == 0 && j == _gridSize.x - 1) {
-                    FillCompleted();
-                }
-            }
-
-            if (willBreak)
-                break;
-        }
-    }
-
-    private void CheckTop(GameObject hexagonCoordinate, int x, int y) {
-
-        bool filled = false;
-
-        if (x > 0) {
-            for (int i = x - 1; i >= 0; i--) {
-
-                bool isTopHexEmpty = Get(i, y).GetComponent<HexagonCoordinate>().IsEmpty();
-                if (!isTopHexEmpty) {
-
-                    SlideHexagonToCoordinate(hexagonCoordinate, GetHexagon(i, y));
-                    filled = true;
-                    break;
-                }
-            }
-        }
-
-        if (!filled) {
-            Vector3 pos = hexagonCoordinate.GetComponent<RectTransform>().position;
-            Vector2Int hexCoor = hexagonCoordinate.GetComponent<HexagonCoordinate>().coordinates;
-            GameGrid.Instance.InstantiateNewHexagon(pos);
-            ContinueFillingGaps(hexCoor.x, hexCoor.y + 1);
-
-            /*for (int i = x; i >= 0; i--) {
-
-                Vector3 pos = Get(i, y).GetComponent<RectTransform>().position;
-                GameGrid.Instance.InstantiateNewHexagon(pos);
-
-                Vector2Int hexCoor = hexagonCoordinate.GetComponent<HexagonCoordinate>().coordinates;
-                //ContinueFillingGaps(hexCoor.x, hexCoor.y);
-            }*/
-        }
-    }
-
-
-    public void SlideHexagonToCoordinate(GameObject hexagonCoordinate, GameObject hexagon) {
-
-        Vector3 newPos = hexagonCoordinate.GetComponent<RectTransform>().position;
-        Vector2Int hexCoor = hexagonCoordinate.GetComponent<HexagonCoordinate>().coordinates;
-
-        LeanTween.moveY(hexagon, newPos.y, 0.1f).setOnComplete(() => {
-
-
-            ContinueFillingGaps(hexCoor.x, hexCoor.y);
-            //if (coordinates.x == 0) {
-            //    GameGrid.Instance.InstantiateNewHexagon(transform.position);
-            //    Debug.Log("Instantiate 1");
-            //}
-            //if (coordinates.x == 1 && step == 2) {
-            //    GameGrid.Instance.InstantiateNewHexagon(transform.position);
-            //    Debug.Log("Instantiate 2");
-            //}
-
-        });
-
-    }
-
-    public void SlideBottom(int x, int y, int step) {
-
-        int newX = x + step;
-        GameObject hex = GetHexagon(x, y);
-
-        Vector3 newPos = GetCoordinatePosition(newX, y);
-
-        LeanTween.moveY(hex, newPos.y, 0.2f).setOnComplete(() => {
             
-            if (x == 0) {
-                GameGrid.Instance.InstantiateNewHexagon(GetCoordinatePosition(x,y));
-                Debug.Log("Instantiate 1");
-            }
-            if (x == 1 && step == 2) {
-                GameGrid.Instance.InstantiateNewHexagon(GetCoordinatePosition(x, y));
-                Debug.Log("Instantiate 2");
+        }
+    }
 
+
+    public void AddCoordinateToFill(Vector2Int coordinate) {
+
+        bool addCoordinate = true;
+
+        for (int i = 0; i < _coordinatesToFill.Count; i++) {
+            if (_coordinatesToFill[i].y == coordinate.y) {
+                if (_coordinatesToFill[i].x >= coordinate.x) {
+                    addCoordinate = false;
+                    break;
+                } else {
+                    _coordinatesToFill.RemoveAt(i);
+                }
+            }
+        }
+        if (addCoordinate) {
+            _coordinatesToFill.Add(coordinate);
+        }
+    }
+
+    public void StartFilling() {
+
+        foreach (Vector2Int coordinate in _coordinatesToFill) {
+            FillCoordinatesOfColumn(coordinate.x, coordinate.y);
+        }
+    }
+
+    public void FillCoordinatesOfColumn(int cx, int cy) {
+
+        int numberOfFilledGap = 0;
+
+        for (int i = cx - 1; i >= 0; i--) {
+            GameObject hexagon = GetHexagon(i, cy);
+            if (hexagon != null) {
+                _hexagonsToSlide.Add(hexagon);
+                _targetPositions.Add(GetCoordinatePosition(cx - numberOfFilledGap, cy).y);
+                //_coordinatesToSlideAndTargetPositions.Add(new Vector2Int(i, cy), GetCoordinatePosition(cx - numberOfFilledGap, cy).y);
+                numberOfFilledGap++;
+            }
+        }
+        _coordinatesToInstantiateAbove.Add(new Vector2Int(cx - numberOfFilledGap, cy));
+
+        StartSliding();
+
+    }
+
+    private void StartSliding() {
+
+        for (int i = 0; i < _hexagonsToSlide.Count; i++) {
+
+            SlideToCoordinate(_hexagonsToSlide[i], _targetPositions[i]);
+        }
+    }
+
+    private void InstantiateHexagonToCoordinateAndAbove() {
+
+        foreach (Vector2Int coordinate in _coordinatesToInstantiateAbove) {
+
+            int cx = coordinate.x;
+            int cy = coordinate.y;
+
+            for (int i = cx; i >= 0; i--) {
+                GameGrid.Instance.InstantiateNewHexagon(GetCoordinatePosition(i, cy));
+            }
+        }
+    }
+
+    public void SlideToCoordinate(GameObject hexagon, float y) {
+
+        _numberOfCurrentlySlidingHexagons++;
+
+        LeanTween.moveY(hexagon, y, 0.2f).setOnComplete(() => {
+
+            _numberOfCurrentlySlidingHexagons--;
+
+            if (_numberOfCurrentlySlidingHexagons < 1) {
+                _numberOfCurrentlySlidingHexagons = 0;
+
+                InstantiateHexagonToCoordinateAndAbove();
+                InitLists();
                 StartCoroutine(StartCheck());
             }
-
         });
 
-
     }
+
+
 }

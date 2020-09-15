@@ -1,16 +1,19 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
+﻿using UnityEngine;
 
 public class ScoreManager : Singleton<ScoreManager> {
 
-    [SerializeField] private TMPro.TextMeshProUGUI _scoreText;
+    [SerializeField] private TMPro.TextMeshProUGUI _scoreText = null;
 
     private int _score = 0;
 
     private void Start() {
 
+        UpdateScoreText();
+    }
+
+    public void SetScore(int score) {
+
+        _score = score;
         UpdateScoreText();
     }
 

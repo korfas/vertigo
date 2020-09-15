@@ -10,12 +10,6 @@ public class GridButtons : Singleton<GridButtons> {
 
     private void Start() {
 
-        //if (Hexagons.Instance.isInitialized) {
-        //    Init();
-        //} else {
-        //    Hexagons.Instance.OnInitialized += Init;
-        //}
-
         if (HexagonCoordinates.Instance.isInitialized) {
             Init();
         } else {
@@ -29,9 +23,7 @@ public class GridButtons : Singleton<GridButtons> {
         try {
             GameGrid.Instance.OnInitialized -= Init;
 
-        } catch (Exception e) {
-            //Debug.Log("Could not unregister callback: " + e.Message);
-        }
+        } catch (Exception) { }
     }
 
     private void Init() {
@@ -53,18 +45,6 @@ public class GridButtons : Singleton<GridButtons> {
             gridButton.GetComponent<GridButton>().selected = false;
         }
     }
-    /*
-    public void CheckMatchesAfterDestroy() {
-
-        foreach (GameObject gridButton in _allGridButtons) {
-            gridButton.GetComponent<GridButton>().CheckMatch();
-        }
-        foreach (GameObject gridButton in _allGridButtons) {
-            gridButton.GetComponent<GridButton>().CheckIsTherePossibleMatch();   
-        }
-
-    }
-    */
 
     public bool CheckMatchAfterDestroy() {
 
@@ -84,14 +64,6 @@ public class GridButtons : Singleton<GridButtons> {
 
         }
     }
-    /*
-    public void CheckPossibleMatches() {
-
-        foreach (GameObject gridButton in _allGridButtons) {
-            gridButton.GetComponent<GridButton>().CheckIsTherePossibleMatch();
-             
-        }
-    }*/
 
     public void CheckIsMatchingOnStart() {
 
@@ -109,6 +81,21 @@ public class GridButtons : Singleton<GridButtons> {
         } else {
             isInitCompleted = true;
             InitComplete?.Invoke();
+        }
+    }
+
+    public void CheckIsTherePossibleMatches() {
+
+        bool isTherePossibleMatch = false;
+        foreach (GameObject gridButton in _allGridButtons) {
+            bool isMatch = gridButton.GetComponent<GridButton>().CheckIsTherePossibleMatch();
+            if (isMatch) {
+                isTherePossibleMatch = true;
+            }
+        }
+
+        if (!isTherePossibleMatch) {
+            GameManager.Instance.UpdateState(GameManager.GameState.GAME_OVER);
         }
     }
 }

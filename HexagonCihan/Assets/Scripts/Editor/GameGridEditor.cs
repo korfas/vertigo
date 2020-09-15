@@ -16,9 +16,6 @@ public class GameGridEditor : Editor {
 
     SerializedProperty _gridSizeProp;
 
-    //SerializedProperty _gridSizeXProp;
-    //SerializedProperty _gridSizeYProp;
-
     SerializedProperty _hexagonPaddingPercentProp;
 
 
@@ -46,9 +43,6 @@ public class GameGridEditor : Editor {
         _buttonPrefabProp = serializedObject.FindProperty("_buttonPrefab");
 
         _gridSizeProp = serializedObject.FindProperty("_gridSize");
-
-        //_gridSizeXProp = serializedObject.FindProperty("_gridSizeX");
-        //_gridSizeYProp = serializedObject.FindProperty("_gridSizeY");
 
         _hexagonPaddingPercentProp = serializedObject.FindProperty("_hexagonPaddingPercent");
 
@@ -82,9 +76,6 @@ public class GameGridEditor : Editor {
         EditorGUILayout.Separator();
 
         _gridSizeProp.vector2IntValue = EditorGUILayout.Vector2IntField("Grid Size", _gridSizeProp.vector2IntValue);
-
-        //gridSizeXProp.intValue = EditorGUILayout.IntField("Width", _gridSizeXProp.intValue);
-        //_gridSizeYProp.intValue = EditorGUILayout.IntField("Heght", _gridSizeYProp.intValue);
 
         EditorGUILayout.EndVertical();
 

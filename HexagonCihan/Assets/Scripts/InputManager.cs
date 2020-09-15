@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class InputManager : Singleton<InputManager> {
 
-    [SerializeField] private Button rotateCCW;
-    [SerializeField] private Button rotateCW;
+    [SerializeField] private Button rotateCCW = null;
+    [SerializeField] private Button rotateCW = null;
 
     public event Action<string> OnRotated;
 
